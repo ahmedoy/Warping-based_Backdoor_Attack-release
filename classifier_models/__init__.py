@@ -13,3 +13,4 @@ from .senet import *
 from .shufflenet import *
 from .shufflenetv2 import *
 from .vgg import *
+from .vgg_mod import *
