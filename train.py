@@ -247,7 +247,7 @@ def eval(
             "identity_grid": identity_grid,
             "noise_grid": noise_grid,
         }
-        torch.save(state_dict, opt.ckpt_path)
+        #torch.save(state_dict, opt.ckpt_path)
         with open(os.path.join(opt.ckpt_folder, "results.txt"), "w+") as f:
             results_dict = {
                 "clean_acc": best_clean_acc.item(),
@@ -255,6 +255,8 @@ def eval(
                 "cross_acc": best_cross_acc.item(),
             }
             json.dump(results_dict, f, indent=2)
+            # Save the model checkpoint as a .pt file
+        torch.save(state_dict, opt.ckpt_path.replace(".pth.tar", ".pt"))  # Replace the extension with .pt added this
     if acc_clean > 80 and acc_bd > 95:
         print("Accuracies above threshold, exiting the program.")
         sys.exit()
