@@ -228,7 +228,7 @@ def eval(
 
 
     # Save checkpoint
-    if acc_clean > best_clean_acc or (acc_clean > best_clean_acc - 0.1 and acc_bd > best_bd_acc):
+    if (acc_clean > best_clean_acc and acc_bd > best_bd_acc-1) or (acc_clean > best_clean_acc - 1 and acc_bd > best_bd_acc):
         print(" Saving...")
         best_clean_acc = acc_clean
         best_bd_acc = acc_bd

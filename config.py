@@ -17,7 +17,7 @@ def get_arguments():
     parser.add_argument("--lr_C", type=float, default=1e-2)
     parser.add_argument("--schedulerC_milestones", type=list, default=[100, 200, 300, 400])
     parser.add_argument("--schedulerC_lambda", type=float, default=0.1)
-    parser.add_argument("--n_iters", type=int, default=1000)
+    parser.add_argument("--n_iters", type=int, default=50)
     parser.add_argument("--num_workers", type=float, default=6)
 
     parser.add_argument("--target_label", type=int, default=0)
