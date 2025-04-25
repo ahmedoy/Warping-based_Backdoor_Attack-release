@@ -11,7 +11,6 @@ import torchvision
 from classifier_models import PreActResNet18, ResNet18, VGGMOD
 from networks.models import Denormalizer, NetC_MNIST, Normalizer
 from torch import nn
-from torch.utils.tensorboard import SummaryWriter
 from torchvision.transforms import RandomErasing
 from utils.dataloader import PostTensorTransform, get_dataloader
 from utils.utils import progress_bar
@@ -38,7 +37,7 @@ def get_model(opt):
     return netC, optimizerC, schedulerC
 
 
-def train(netC, optimizerC, schedulerC, train_dl, noise_grid, identity_grid, tf_writer, epoch, opt):
+def train(netC, optimizerC, schedulerC, train_dl, noise_grid, identity_grid, epoch, opt):
     print(" Train:")
     netC.train()
     rate_bd = opt.pc
@@ -150,12 +149,6 @@ def train(netC, optimizerC, schedulerC, train_dl, noise_grid, identity_grid, tf_
             batch_img = F.upsample(batch_img, scale_factor=(4, 4))
             grid = torchvision.utils.make_grid(batch_img, normalize=True)
 
-    # for tensorboard
-    if not epoch % 1:
-        tf_writer.add_scalars(
-            "Clean Accuracy", {"Clean": avg_acc_clean, "Bd": avg_acc_bd, "Cross": avg_acc_cross}, epoch
-        )
-        tf_writer.add_image("Images", grid, global_step=epoch)
 
     schedulerC.step()
 
@@ -170,7 +163,6 @@ def eval(
     best_clean_acc,
     best_bd_acc,
     best_cross_acc,
-    tf_writer,
     epoch,
     opt,
 ):
@@ -233,9 +225,7 @@ def eval(
                 )
             progress_bar(batch_idx, len(test_dl), info_string)
 
-    # tensorboard
-    if not epoch % 1:
-        tf_writer.add_scalars("Test Accuracy", {"Clean": acc_clean, "Bd": acc_bd}, epoch)
+
 
     # Save checkpoint
     if acc_clean > best_clean_acc or (acc_clean > best_clean_acc - 0.1 and acc_bd > best_bd_acc):
@@ -328,7 +318,6 @@ def main():
             epoch_current = state_dict["epoch_current"]
             identity_grid = state_dict["identity_grid"]
             noise_grid = state_dict["noise_grid"]
-            tf_writer = SummaryWriter(log_dir=opt.log_dir)
         else:
             print("Pretrained model doesnt exist")
             exit()
@@ -355,11 +344,10 @@ def main():
         os.makedirs(opt.log_dir)
         with open(os.path.join(opt.ckpt_folder, "opt.json"), "w+") as f:
             json.dump(opt.__dict__, f, indent=2)
-        tf_writer = SummaryWriter(log_dir=opt.log_dir)
 
     for epoch in range(epoch_current, opt.n_iters):
         print("Epoch {}:".format(epoch + 1))
-        train(netC, optimizerC, schedulerC, train_dl, noise_grid, identity_grid, tf_writer, epoch, opt)
+        train(netC, optimizerC, schedulerC, train_dl, noise_grid, identity_grid, epoch, opt)
         best_clean_acc, best_bd_acc, best_cross_acc = eval(
             netC,
             optimizerC,
@@ -370,7 +358,6 @@ def main():
             best_clean_acc,
             best_bd_acc,
             best_cross_acc,
-            tf_writer,
             epoch,
             opt,
         )

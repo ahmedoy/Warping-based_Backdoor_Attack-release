@@ -11,7 +11,6 @@ import torchvision
 from classifier_models import PreActResNet18, ResNet18
 from networks.models import Denormalizer, NetC_MNIST, Normalizer
 from torch import nn
-from torch.utils.tensorboard import SummaryWriter
 from torchvision.transforms import RandomErasing
 from utils.dataloader import PostTensorTransform, get_dataloader
 from utils.utils import progress_bar
