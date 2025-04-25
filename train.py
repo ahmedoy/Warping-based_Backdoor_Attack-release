@@ -228,7 +228,7 @@ def eval(
 
 
     # Save checkpoint
-    if (acc_clean > best_clean_acc and acc_bd > best_bd_acc-1) or (acc_clean > best_clean_acc - 1 and acc_bd > best_bd_acc) or (acc_clean > 85 and acc_bd > 95):
+    if (acc_clean > best_clean_acc and acc_bd > best_bd_acc-1) or (acc_clean > best_clean_acc - 1 and acc_bd > best_bd_acc) or (acc_clean > 80 and acc_bd > 95):
         print(" Saving...")
         best_clean_acc = acc_clean
         best_bd_acc = acc_bd
@@ -255,7 +255,7 @@ def eval(
                 "cross_acc": best_cross_acc.item(),
             }
             json.dump(results_dict, f, indent=2)
-    if acc_clean > 85 and acc_bd > 95:
+    if acc_clean > 80 and acc_bd > 95:
         print("Accuracies above threshold, exiting the program.")
         sys.exit()
     return best_clean_acc, best_bd_acc, best_cross_acc
