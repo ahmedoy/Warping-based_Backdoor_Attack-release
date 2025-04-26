@@ -262,12 +262,9 @@ def eval(
 
 
 def main():
-    parser = config.get_arguments()
-    parser.add_argument('--num_models', type=int, default=1,
-                        help='how many independent models to train (with separate checkpoints)')
     
     opt = config.get_arguments().parse_args()
-
+    NUMBER_OF_MODELS = 20
     if opt.dataset in ["mnist", "cifar10"]:
         opt.num_classes = 10
     elif opt.dataset == "gtsrb":
@@ -311,8 +308,8 @@ def main():
     if not os.path.exists(opt.log_dir):
         os.makedirs(opt.log_dir)
 
-    for run_idx in range(opt.num_models):
-        print(f"\n=== Starting run {run_idx+1}/{opt.num_models} ===")
+    for run_idx in range(NUMBER_OF_MODELS):
+        print(f"\n=== Starting run {run_idx+1}/{NUMBER_OF_MODELS} ===")
 
         # reset best accuracies for each run
         best_clean_acc = 0.0
@@ -364,12 +361,12 @@ def main():
                 epoch, opt
             )
 
-        print(f"=== Finished run {run_idx+1}/{opt.num_models}:"
+        print(f"=== Finished run {run_idx+1}/{NUMBER_OF_MODELS}:"
               f" best clean {best_clean_acc:.2f}, bd {best_bd_acc:.2f} ===")
 
 
 if __name__ == "__main__":
     main()
     # Run With
-    # python train.py --dataset cifar10 --attack_mode all2one --num_models 20
+    # python train.py --dataset cifar10 --attack_mode all2one
 
