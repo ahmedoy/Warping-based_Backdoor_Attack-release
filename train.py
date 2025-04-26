@@ -238,8 +238,6 @@ def eval(
             best_cross_acc = torch.tensor([0])
         state_dict = {
             "netC": netC.state_dict(),
-            "schedulerC": schedulerC.state_dict(),
-            "optimizerC": optimizerC.state_dict(),
             "best_clean_acc": best_clean_acc,
             "best_bd_acc": best_bd_acc,
             "best_cross_acc": best_cross_acc,
