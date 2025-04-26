@@ -262,6 +262,10 @@ def eval(
 
 
 def main():
+    parser = config.get_arguments()
+    parser.add_argument('--num_models', type=int, default=1,
+                        help='how many independent models to train (with separate checkpoints)')
+    
     opt = config.get_arguments().parse_args()
 
     if opt.dataset in ["mnist", "cifar10"]:
@@ -307,63 +311,65 @@ def main():
     if not os.path.exists(opt.log_dir):
         os.makedirs(opt.log_dir)
 
-    if opt.continue_training:
-        if os.path.exists(opt.ckpt_path):
-            print("Continue training!!")
-            state_dict = torch.load(opt.ckpt_path)
-            netC.load_state_dict(state_dict["netC"])
-            optimizerC.load_state_dict(state_dict["optimizerC"])
-            schedulerC.load_state_dict(state_dict["schedulerC"])
-            best_clean_acc = state_dict["best_clean_acc"]
-            best_bd_acc = state_dict["best_bd_acc"]
-            best_cross_acc = state_dict["best_cross_acc"]
-            epoch_current = state_dict["epoch_current"]
-            identity_grid = state_dict["identity_grid"]
-            noise_grid = state_dict["noise_grid"]
-        else:
-            print("Pretrained model doesnt exist")
-            exit()
-    else:
-        print("Train from scratch!!!")
-        best_clean_acc = 0.0
-        best_bd_acc = 0.0
-        best_cross_acc = 0.0
-        epoch_current = 0
+    for run_idx in range(opt.num_models):
+        print(f"\n=== Starting run {run_idx+1}/{opt.num_models} ===")
 
-        # Prepare grid
+        # reset best accuracies for each run
+        best_clean_acc = 0.0
+        best_bd_acc    = 0.0
+        best_cross_acc = 0.0
+        epoch_current  = 0
+
+        # build fresh grids for each model
         ins = torch.rand(1, 2, opt.k, opt.k) * 2 - 1
         ins = ins / torch.mean(torch.abs(ins))
         noise_grid = (
             F.upsample(ins, size=opt.input_height, mode="bicubic", align_corners=True)
-            .permute(0, 2, 3, 1)
-            .to(opt.device)
+             .permute(0,2,3,1)
+             .to(opt.device)
         )
         array1d = torch.linspace(-1, 1, steps=opt.input_height)
-        x, y = torch.meshgrid(array1d, array1d)
-        identity_grid = torch.stack((y, x), 2)[None, ...].to(opt.device)
+        x, y    = torch.meshgrid(array1d, array1d)
+        identity_grid = torch.stack((y, x), 2)[None,...].to(opt.device)
 
-        shutil.rmtree(opt.ckpt_folder, ignore_errors=True)
-        os.makedirs(opt.log_dir)
-        with open(os.path.join(opt.ckpt_folder, "opt.json"), "w+") as f:
+        # now *per-run* checkpoint & log folders include run_idx
+        opt.ckpt_folder = os.path.join(opt.checkpoints,
+                                       opt.dataset,
+                                       f"run_{run_idx}")
+        opt.log_dir     = os.path.join(opt.ckpt_folder, "log_dir")
+        os.makedirs(opt.log_dir, exist_ok=True)
+
+        # write args for this run
+        with open(os.path.join(opt.ckpt_folder, "opt.json"), "w") as f:
             json.dump(opt.__dict__, f, indent=2)
 
-    for epoch in range(epoch_current, opt.n_iters):
-        print("Epoch {}:".format(epoch + 1))
-        train(netC, optimizerC, schedulerC, train_dl, noise_grid, identity_grid, epoch, opt)
-        best_clean_acc, best_bd_acc, best_cross_acc = eval(
-            netC,
-            optimizerC,
-            schedulerC,
-            test_dl,
-            noise_grid,
-            identity_grid,
-            best_clean_acc,
-            best_bd_acc,
-            best_cross_acc,
-            epoch,
-            opt,
-        )
+        # adjust ckpt path so they never overwrite
+        opt.ckpt_path = os.path.join(opt.ckpt_folder,
+                                     f"{opt.dataset}_{opt.attack_mode}_morph_run{run_idx}.pt")
+
+        # (optionally allow continue_training here, or always start fresh)
+        print("Train from scratch!!!")
+        netC, optimizerC, schedulerC = get_model(opt)
+
+        # now the usual epoch loop:
+        for epoch in range(epoch_current, opt.n_iters):
+            print(f"Epoch {epoch+1}:")
+            train(netC, optimizerC, schedulerC,
+                  train_dl, noise_grid, identity_grid,
+                  epoch, opt)
+            best_clean_acc, best_bd_acc, best_cross_acc = eval(
+                netC, optimizerC, schedulerC,
+                test_dl, noise_grid, identity_grid,
+                best_clean_acc, best_bd_acc, best_cross_acc,
+                epoch, opt
+            )
+
+        print(f"=== Finished run {run_idx+1}/{opt.num_models}:"
+              f" best clean {best_clean_acc:.2f}, bd {best_bd_acc:.2f} ===")
 
 
 if __name__ == "__main__":
     main()
+    # Run With
+    # python train.py --dataset cifar10 --attack_mode all2one --num_models 20
+
