@@ -255,10 +255,12 @@ def eval(
             json.dump(results_dict, f, indent=2)
             # Save the model checkpoint as a .pt file
         torch.save(state_dict, opt.ckpt_path.replace(".pth.tar", ".pt"))  # Replace the extension with .pt added this
+
+    continue_training = True
     if acc_clean > 80 and acc_bd > 95:
-        print("Accuracies above threshold, exiting the program.")
-        sys.exit()
-    return best_clean_acc, best_bd_acc, best_cross_acc
+        print("Accuracies above threshold. Moving to next model")
+        continue_training = False
+    return best_clean_acc, best_bd_acc, best_cross_acc, continue_training
 
 
 def main():
@@ -354,12 +356,15 @@ def main():
             train(netC, optimizerC, schedulerC,
                   train_dl, noise_grid, identity_grid,
                   epoch, opt)
-            best_clean_acc, best_bd_acc, best_cross_acc = eval(
+            best_clean_acc, best_bd_acc, best_cross_acc, continue_training = eval(
                 netC, optimizerC, schedulerC,
                 test_dl, noise_grid, identity_grid,
                 best_clean_acc, best_bd_acc, best_cross_acc,
                 epoch, opt
             )
+
+            if not continue_training:
+                break
 
         print(f"=== Finished run {run_idx+1}/{NUMBER_OF_MODELS}:"
               f" best clean {best_clean_acc:.2f}, bd {best_bd_acc:.2f} ===")
