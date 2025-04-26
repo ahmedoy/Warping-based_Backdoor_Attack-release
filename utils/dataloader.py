@@ -138,8 +138,11 @@ class CelebA_attr(data.Dataset):
         return (input, target)
 
 
-def get_dataloader(opt, train=True, pretensor_transform=False):
-    transform = get_transform(opt, train, pretensor_transform)
+def get_dataloader(opt, train=True, pretensor_transform=False, use_transform=True):
+    if use_transform:
+        transform = get_transform(opt, train, pretensor_transform)
+    else:
+        transform = transforms.Compose([transforms.ToTensor()])
     if opt.dataset == "gtsrb":
         dataset = GTSRB(opt, train, transform)
     elif opt.dataset == "mnist":
