@@ -22,7 +22,7 @@ def get_model(opt):
     schedulerC = None
 
     if opt.dataset == "cifar10" or opt.dataset == "gtsrb":
-        netC = VGGMOD(num_classes=opt.num_classes).to(opt.device)
+        netC = PreActResNet18(num_classes=opt.num_classes).to(opt.device) # editing here
     if opt.dataset == "celeba":
         netC = ResNet18().to(opt.device)
     if opt.dataset == "mnist":
