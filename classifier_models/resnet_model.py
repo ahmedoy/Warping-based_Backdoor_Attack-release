@@ -86,3 +86,7 @@ class ResNet(nn.Module):
         x = self.fc(x)
 
         return x
+
+
+def ourResnet(num_classes=10):
+    return ResNet(num_classes=num_classes)
