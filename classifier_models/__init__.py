@@ -14,3 +14,4 @@ from .shufflenet import *
 from .shufflenetv2 import *
 from .vgg import *
 from .vgg_mod import *
+from .resnet_model import *
