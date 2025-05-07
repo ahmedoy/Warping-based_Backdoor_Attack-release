@@ -8,7 +8,7 @@ import numpy as np
 import torch
 import torch.nn.functional as F
 import torchvision
-from classifier_models import PreActResNet18, ResNet18, VGGMOD
+from classifier_models import PreActResNet18, ResNet18, VGGMOD, ourResnet
 from networks.models import Denormalizer, NetC_MNIST, Normalizer
 from torch import nn
 from torchvision.transforms import RandomErasing
@@ -22,7 +22,7 @@ def get_model(opt):
     schedulerC = None
 
     if opt.dataset == "cifar10" or opt.dataset == "gtsrb":
-        netC = PreActResNet18(num_classes=opt.num_classes).to(opt.device) # editing here
+        netC = ourResnet(num_classes=opt.num_classes).to(opt.device) # editing here
     if opt.dataset == "celeba":
         netC = ResNet18().to(opt.device)
     if opt.dataset == "mnist":
